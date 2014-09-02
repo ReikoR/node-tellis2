@@ -25,15 +25,6 @@ $(document).ready(function () {
     window.kickStrength = 5000;
     window.socket = io.connect();
 
-	window.setAngle = function (newAngle) {
-		socket.emit('set angle', newAngle);
-	}
-
-	setInterval(function () {
-		rotation += rotationChange;
-		setAngle(rotation);
-	}, 100);
-
     $(window).blur(function() {
         console.log('window blur');
         socket.emit('drive', {speed: 0, angle: 0, rotation: 0});
@@ -56,12 +47,6 @@ $(document).ready(function () {
         console.log('not ready');
     });
 
-	socket.on('angle', function (gz) {
-		zAngle = gz;
-        //console.log(zAngle);
-		$('#gz').text('Gyro angle: ' + zAngle);
-    });
-
     function drive() {
         var rotationalSpeed = speedMetricToRobot(rotationRadiansToMetersPerSecond(rotation)),
             speed = Math.sqrt(xSpeed * xSpeed + ySpeed * ySpeed),
@@ -78,7 +63,6 @@ $(document).ready(function () {
         $('#wheel3').html('Wheel3: ' + Math.round(wheel3Speed));
         $('#wheel4').html('Wheel4: ' + Math.round(wheel4Speed));
         socket.emit('drive', {speed: speed, angle: angle, rotation: rotation});
-		setAngle(rotation);
         if (driveTimeout) {
             clearTimeout(driveTimeout);
         }
@@ -148,14 +132,6 @@ $(document).ready(function () {
                 kick();
                 $('#kicker').html('KICK');
                 break;
-            case 8:
-                backButton = true;
-                break;
-            case 9:
-                if (backButton === true) {
-                    resetUsb();
-                }
-                break;
 			case 'DPAD_DOWN':
                 maxSpeed = 2;
 				maxRotation = 4;
@@ -195,8 +171,7 @@ $(document).ready(function () {
         switch(e.axis) {
             case 'LEFT_STICK_X':
                 $('#rotate').html('Rotate: ' + e.value);
-                //rotation = e.value * maxRotation;
-				rotationChange = -e.value * 20;
+                rotation = e.value * maxRotation;
                 break;
             case 'RIGHT_STICK_X':
                 $('#side').html('X: ' + e.value);

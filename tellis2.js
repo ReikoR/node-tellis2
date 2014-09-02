@@ -45,8 +45,7 @@ io.set('log level', 2);
 io.sockets.on('connection', function (socket) {
     socket.on('drive', function (data) {
         data = data || {};
-        //drive(data.speed || 0, data.angle || 0, data.rotation || 0);
-		drive(data.speed || 0, data.angle || 0, lastRotation || 0);
+        drive(data.speed || 0, data.angle || 0, data.rotation || 0);
     });
 
     socket.on('dribbler', function (data) {
@@ -65,58 +64,8 @@ io.sockets.on('connection', function (socket) {
 });
 
 client.on("message", function (msg, rinfo) {
-	var angleRegex = /<angle:(.*)>/;
-	var match = angleRegex.exec(msg);
-	if (match) {
-		angle = parseFloat(match[1]);
-		io.sockets.emit('angle', angle);
-		//console.log(angle);
-	}
 	//console.log("server got: " + msg + " from " + rinfo.address + ":" + rinfo.port);
 });
-
-var error = 0,
-	errorIntegral = 0,
-	maxRotSpeed = 20,
-	pGain = 5,
-	iGain = 0.01,
-	maxI = maxRotSpeed / iGain,
-	minRotSpeed = 0;
-
-setInterval(function() {
-	error = (angle - angleSetpoint) / 180 * Math.PI;
-	errorIntegral += error
-	if (errorIntegral >= maxI) {
-		errorIntegral = maxI;
-	} else if (errorIntegral <= -maxI) {
-		errorIntegral = -maxI;
-	}
-
-	console.log(Math.abs(error));
-
-	if (Math.abs(error) <= 0.05)	{
-		error = 0;
-		errorIntegral = 0;
-	}
-
-	var rotSpeed = pGain * error + iGain * errorIntegral;
-	//var rotSpeed = 0.5 * error;
-
-	if (rotSpeed >= maxRotSpeed) {
-		rotSpeed = maxRotSpeed;
-	} else if (rotSpeed <= -maxRotSpeed) {
-		rotSpeed = -maxRotSpeed;
-	}
-
-	//console.log(rotSpeed);
-
-	if (Math.abs(rotSpeed) >= minRotSpeed) {
-		drive(lastSpeed, lastAngle, rotSpeed);
-	}	
-
-	var message = new Buffer('ga');
-    client.send(message, 0, message.length, serverPort, serverAddress);
-}, 1 / 50);
 
 function drive(speed, angle, rotation) {
 	lastSpeed = speed;
